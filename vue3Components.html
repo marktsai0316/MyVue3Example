@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue 3 多子組件範例</title>
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 20px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      text-align: center;
+    }
+    button {
+      padding: 8px 16px;
+      background: #42b983;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    .component-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .status-box {
+      padding: 20px;
+      background: #f8f8f8;
+      margin: 20px 0;
+      flex: 1;
+      border: 2px solid transparent;
+    }
+    .status-box.time-component {
+      border-color: #42b983;
+    }
+    .status-box.animation-component {
+      border-color: #647eff;
+    }
+    .animated-box {
+      width: 100px;
+      height: 100px;
+      background: #647eff;
+      margin: 10px auto;
+      transition: transform 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp, ref, onMounted, onUnmounted } = Vue
+
+    // 第一個子組件：時間與窗口監控
+    const TimeComponent = {
+      template: `
+        <div class="status-box time-component">
+          <h3>時間與窗口監控</h3>
+          <p>當前時間: {{ currentTime }}</p>
+          <p>窗口寬度: {{ windowWidth }}px</p>
+        </div>
+      `,
+      setup() {
+        const currentTime = ref('')
+        const windowWidth = ref(window.innerWidth)
+        let timer = null
+
+        const updateTime = () => {
+          currentTime.value = new Date().toLocaleTimeString()
+        }
+
+        const handleResize = () => {
+          windowWidth.value = window.innerWidth
+        }
+
+        onMounted(() => {
+          console.log('時間組件已掛載')
+          timer = setInterval(updateTime, 1000)
+          window.addEventListener('resize', handleResize)
+        })
+
+        onUnmounted(() => {
+          console.log('時間組件即將卸載')
+          clearInterval(timer)
+          window.removeEventListener('resize', handleResize)
+        })
+
+        return { currentTime, windowWidth }
+      }
+    }
+
+    // 第二個子組件：動畫效果
+    const AnimationComponent = {
+       // <div class="animated-box" :style="{ transform: `rotate(${rotation}deg)` }"></div>
+      template: `
+        <div class="status-box animation-component">
+          <h3>動畫效果</h3> 
+          <div class="animated-box" ></div>
+          <p>旋轉角度: {{ rotation }}°</p>
+        </div>
+      `,
+      setup() {
+        const rotation = ref(0)
+        let animationFrame = null
+
+        const animate = () => {
+          rotation.value = (rotation.value + 2) % 360
+          animationFrame = requestAnimationFrame(animate)
+        }
+
+        onMounted(() => {
+          console.log('動畫組件已掛載')
+          animationFrame = requestAnimationFrame(animate)
+        })
+
+        onUnmounted(() => {
+          console.log('動畫組件即將卸載')
+          cancelAnimationFrame(animationFrame)
+        })
+
+        return { rotation }
+      }
+    }
+
+    // 父組件
+    createApp({
+      components: { TimeComponent, AnimationComponent }, //isCustomElement:time-component,animation-component 
+      setup() {
+        const showTimeComponent = ref(true)
+        const showAnimationComponent = ref(true)
+
+        return { 
+          showTimeComponent,
+          showAnimationComponent
+        }
+      },
+      template: `
+        <div class="container">
+          <h1>多組件生命週期管理範例</h1>
+          
+          <div>
+            <button @click="showTimeComponent = !showTimeComponent">
+              {{ showTimeComponent ? '移除時間組件' : '加載時間組件' }}
+            </button>
+            <button @click="showAnimationComponent = !showAnimationComponent">
+              {{ showAnimationComponent ? '移除動畫組件' : '加載動畫組件' }}
+            </button>
+          </div>
+
+          <div class="component-container">
+            <time-component v-if="showTimeComponent" />
+            <animation-component v-if="showAnimationComponent" />
+             <time-component v-if="showTimeComponent" />
+            <animation-component v-if="showAnimationComponent" />
+         </div>
+
+          <div v-if="!showTimeComponent && !showAnimationComponent">
+            <p>所有組件都已移除</p>
+          </div>
+        </div>
+      `
+    }).mount('#app')
+  </script>
+</body>
+</html>
