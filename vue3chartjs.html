@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue Dashboard</title>
+    
+    <!-- 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="dashboard">
+            <div class="header card">
+                <h1>數據儀表板</h1>
+                <p>最後更新時間: {{ lastUpdate }}</p>
+                <button @click="refreshData">刷新數據</button>
+            </div>
+
+            <div class="card">
+                <h2>銷售趨勢</h2>
+                <div class="chart-container">
+                    <canvas ref="lineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>產品分布</h2>
+                <div class="chart-container">
+                    <canvas ref="barChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>類別佔比</h2>
+                <div class="chart-container">
+                    <canvas ref="pieChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>效能指標</h2>
+                <div class="chart-container">
+                    <canvas ref="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, markRaw,toRaw } = Vue;
+
+        createApp({
+            setup() {
+                const lineChart = ref(null);
+                const barChart = ref(null);
+                const pieChart = ref(null);
+                const radarChart = ref(null);
+                const lastUpdate = ref(new Date().toLocaleString());
+
+                // 生成隨機數據
+                const generateData = (count) => {
+                    return Array.from({length: count}, () => Math.floor(Math.random() * 100));
+                };
+
+                // 圖表配置
+                const chartConfig = {
+                    line: {
+                        type: 'line',
+                        data: {
+                            labels: ['一月', '二月', '三月', '四月', '五月', '六月'],
+                            datasets: [{
+                                label: '銷售額',
+                                data: generateData(6),
+                                borderColor: 'rgb(75, 192, 192)',
+                                tension: 0.1
+                            }]
+                        }
+                    },
+                    bar: {
+                        type: 'bar',
+                        data: {
+                            labels: ['產品A', '產品B', '產品C', '產品D'],
+                            datasets: [{
+                                label: '銷售量',
+                                data: generateData(4),
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.5)',
+                                    'rgba(54, 162, 235, 0.5)',
+                                    'rgba(255, 206, 86, 0.5)',
+                                    'rgba(75, 192, 192, 0.5)'
+                                ]
+                            }]
+                        }
+                    },
+                    pie: {
+                        type: 'pie',
+                        data: {
+                            labels: ['電子', '服飾', '食品', '家居'],
+                            datasets: [{
+                                data: generateData(4),
+                                backgroundColor: [
+                                    '#FF6384',
+                                    '#36A2EB',
+                                    '#FFCE56',
+                                    '#4BC0C0'
+                                ]
+                            }]
+                        }
+                    },
+                    radar: {
+                        type: 'radar',
+                        data: {
+                            labels: ['速度', '可靠性', '效能', '安全', '可用性'],
+                            datasets: [{
+                                label: '系統指標',
+                                data: generateData(5),
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)'
+                            }]
+                        }
+                    }
+                };
+
+                // 初始化圖表
+                const initChart = (canvasRef, config) => {
+                    return markRaw(new Chart(canvasRef.getContext('2d'), config)); //patch with markRaw
+                };
+
+                // 刷新數據
+                const refreshData = () => {
+                    lastUpdate.value = new Date().toLocaleString();
+                    charts.value.forEach(chart => {
+                        chart.data.datasets.forEach(dataset => {
+                            dataset.data = toRaw(generateData(dataset.data.length));
+                        });
+                        chart.update();
+                    });
+                };
+
+                const charts = ref([]);
+
+                onMounted(() => {
+                    charts.value = [
+                        initChart(lineChart.value, chartConfig.line),
+                        initChart(barChart.value, chartConfig.bar),
+                        initChart(pieChart.value, chartConfig.pie),
+                        initChart(radarChart.value, chartConfig.radar)
+                    ];
+                });
+
+                return {
+                    lineChart,
+                    barChart,
+                    pieChart,
+                    radarChart,
+                    lastUpdate,
+                    refreshData
+                };
+            }
+        }).mount('#app');
+      
+    </script>
+</body>
+</html>
