@@ -2,9 +2,10 @@
 ### vue3Apps.html
 ![image](https://github.com/user-attachments/assets/f4eea58c-d02c-4c0e-8590-62473fa94b90)
 
-### vue3AppsComm.html
+### vue3AppsCommEventBus.html
 ```
 通信方法 ：瀏覽器全域事件系統 (Event Bus)
+輕量、簡單	需手動管理事件、較難除錯	簡單小應用
 ```
 
 ### vue3Components.html
