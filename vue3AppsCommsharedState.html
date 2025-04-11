@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multiple Vue Apps</title>
+  <!-- 引入 Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    /* 基本樣式 */
+    .app-container {
+      margin: 20px;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    
+    #app1 {
+      background-color: #f0f8ff;
+    }
+    
+    #app2 {
+      background-color: #fff0f5;
+    }
+    
+    button {
+      padding: 8px 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- 第一個 Vue 應用程式掛載點 -->
+  <div id="app1" class="app-container">
+    <h2>App 1 - 計數器</h2>
+    <p>(方法2)共享狀態物件：{{ sharedState.count }}</p>
+    <p>計數: {{ count }}</p>
+    <button @click="increment">增加</button>
+    <button @click="reset">重置</button>
+</div>
+
+  <!-- 第二個 Vue 應用程式掛載點 -->
+  <div id="app2" class="app-container">
+    <h2>App 2 - 訊息反轉</h2>
+    <input v-model="message" placeholder="輸入訊息">
+    <p>反轉訊息: {{ reversedMessage }}</p>
+    <button @click="sendCount">(方法1)同步到 App1</button>
+    <button @click="sharedState.count++">(方法2)增加</button>
+</div>
+
+  <script>
+    //方法1 :
+    // 全域事件中心
+    const eventBus = {
+        events: {},
+        emit(event, data) {
+            if (this.events[event]) this.events[event].forEach(cb => cb(data))
+        },
+        on(event, callback) {
+            this.events[event] = this.events[event] || []
+            this.events[event].push(callback)
+        }
+    }
+    //方法2:
+    // 共享狀態對象 (需使用 reactive 保持響應性)
+    const sharedState = Vue.reactive({ count: 0 })
+
+   // 第一個 Vue 應用程式
+    const app1 = Vue.createApp({
+      data() {
+        console.log('data()');
+        return {
+          count: 0
+          ,sharedState  //方法2
+        }
+      },
+      //方法1
+      mounted() {
+        console.log('mounted()'); //註冊Hook Handle註冊
+        eventBus.on('update-count', newCount => {
+            console.log('ReceiveCount()-update-count'); //接收數值接收數值
+            this.count = newCount
+        })
+      },
+      methods: {
+        increment() {
+          this.count++
+        },
+        reset() {
+          this.count = 0
+        }
+      }
+    }).mount('#app1')
+
+    // 第二個 Vue 應用程式
+    const app2 = Vue.createApp({
+      data() {
+        return {
+          message: ''
+          ,sharedState  //方法2
+        }
+      },
+      //方法1
+      methods: {
+        sendCount() {
+            console.log('sendCount().update-count')
+            eventBus.emit('update-count', Math.floor(Math.random() * 100)) //傳送數值
+        }
+      },  
+      computed: {
+        reversedMessage() {
+          return this.message.split('').reverse().join('')
+        }
+      }
+    }).mount('#app2')
+  </script>
+</body>
+</html>
+
+
+
+
