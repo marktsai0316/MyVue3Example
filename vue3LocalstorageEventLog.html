@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue 3 監聽 localStorage 變動</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .log {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+      height: 100px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>監聽 localStorage 變動範例</h1>
+    
+    <div class="container">
+      <h2>測試數據</h2>
+      <button @click="updateData">更新測試數據</button>
+      <button @click="clearData">清除測試數據</button>
+      <p>當前測試數據: {{ testData || '無' }}</p>
+    </div>
+    
+    <div class="container">
+      <h2>跨頁面測試</h2>
+      <p>打開另一個同源頁面，修改 localStorage 中的 'test-data' 值</p>
+    </div>
+    
+    <div class="container">
+      <h2>變動日誌</h2>
+      <div class="log">
+        <div v-for="(log, index) in logs" :key="index">{{ log }}</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp, ref, onMounted, onUnmounted } = Vue;
+    
+    createApp({
+      setup() {
+        const testData = ref(localStorage.getItem('test-data') || '');
+        const logs = ref([]);
+        
+        // 添加日誌
+        const addLog = (message) => {
+          const timestamp = new Date().toLocaleTimeString();
+          logs.value.unshift(`[${timestamp}] ${message}`);
+          if (logs.value.length > 10) {
+            logs.value.pop();
+          }
+        };
+        
+        // 更新測試數據
+        const updateData = () => {
+          const newData = `測試數據-${Math.floor(Math.random() * 1000)}`;
+          localStorage.setItem('test-data', newData); //Note:僅會觸發跨頁面storageChange Event,自己頁面發的不會收到
+          testData.value = newData;
+          addLog(`當前頁面更新了測試數據: ${newData}`);
+        };
+        
+        // 清除測試數據
+        const clearData = () => {
+          localStorage.removeItem('test-data'); ////Note:僅會觸發跨頁面storageChange Event,自己頁面發的不會收到
+          testData.value = '';
+          addLog('當前頁面清除了測試數據');
+        };
+        
+        // 處理 storage 事件 //Note:僅會收到跨頁面storageChange Event,自己頁面發的不會收到
+        const handleStorageChange = (event) => {
+          console.log('handleStorageChange(event)');
+          if (event.key === 'test-data') {
+            testData.value = event.newValue || '';
+            
+            if (event.newValue === null) {
+              addLog('其他頁面/窗口清除了測試數據');
+            } else if (event.oldValue === null) {
+              addLog(`其他頁面/窗口設置了測試數據: ${event.newValue}`);
+            } else {
+              addLog(`其他頁面/窗口更新了測試數據: ${event.oldValue} → ${event.newValue}`);
+            }
+          }
+        };
+        
+        // 組件掛載時
+        onMounted(() => {
+          // 添加 storage 事件監聽器
+          //https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+          window.addEventListener('storage', handleStorageChange);
+          addLog('已開始監聽 localStorage 變動');
+        });
+        
+        // 組件卸載時
+        onUnmounted(() => {
+          // 移除 storage 事件監聽器
+          //https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+          window.removeEventListener('storage', handleStorageChange);
+        });
+        
+        return {
+          testData,
+          logs,
+          updateData,
+          clearData
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
