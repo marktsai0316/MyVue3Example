@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vue3 + ECharts + Chart.js Dashboard</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+    }
+    #app {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 20px;
+    }
+    .chart-box {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 16px;
+    }
+    /* TODO */
+    canvas, #echartline,#echartbar,#echartpie,#echartdoughnut,#echartgauge ,#echartradar{
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div class="chart-box">
+    <h3></h3>如果您需要更專業的 Gauge 圖表，可以考慮：
+    Google Charts: 提供原生 Gauge 圖表    
+    Highcharts: 有完善的 Gauge 支持    
+    ApexCharts: 提供現代化的儀表圖    
+    ECharts: 支持多種 Gauge 變體
+  </div>  
+    <div class="chart-box">
+        <h1>Google Charts</h1>
+        <a href="https://www.w3schools.com/graphics/plot_google_chart.asp">這個連結</a>會連到 Google Charts<br>
+    </div>
+    <div class="chart-box">
+        <h1>Highcharts（商業非免費）</h1>
+        <a href="https://www.highcharts.com/demo">這個連結</a>會連到 Highcharts<br>
+        
+    </div>
+    <div class="chart-box">
+        <h1>ApexCharts</h1>
+        <a href="https://www.apexcharts.com/docs/chart-types/pie-donut/">這個連結</a>會連到 ApexCharts<br>
+    </div>
+    <div class="chart-box">
+        <h1>ECharts</h1>
+        <a href="https://echarts.apache.org/examples/zh/">這個連結</a>會連到 ECharts<br>
+    </div>
+    <div class="chart-box">
+        <h1>Chart.js</h1>
+        <a href="https://www.chartjs.org/docs/latest/charts/line.html">這個連結</a>會連到 Chart.js<br>
+    </div>
+   
+
+  <div id="app">
+    <div class="chart-box">
+        <h3>ECharts 折線圖</h3>
+        <div id="echartline"></div>
+    </div>
+    <div class="chart-box">
+        <h3>Charts 折線圖</h3>
+        <canvas id="chartline"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>ECharts 直條圖</h3>
+        <div id="echartbar"></div>
+    </div>
+    <div class="chart-box">
+        <h3>Charts 直條圖</h3>
+        <canvas id="chartbar"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>ECharts pie圖</h3>
+        <div id="echartpie"></div>
+    </div>
+    <div class="chart-box">
+        <h3>Chart.js pie圖</h3>
+        <canvas id="chartpie"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>ECharts 甜甜圈圖(使用pie)</h3>
+        <div id="echartdoughnut"></div>
+    </div>
+    <div class="chart-box">
+        <h3>Chart.js 甜甜圈圖</h3>
+        <canvas id="chartdoughnut"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>ECharts gauge圖</h3>
+        <div id="echartgauge"></div>
+    </div>
+    <div class="chart-box">
+        <h3>Chart.js gauge圖(TODO)</h3>
+        <p>Chart.js 本身不直接提供 Gauge（儀表圖）類型，但您可以通過以下幾種方式實現類似效果：
+            
+            1. 使用 Chart.js 的 Doughnut（圓環圖）模擬 Gauge</p>
+        <canvas id="chartgauge"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>ECharts radar圖(Data採逆時鐘順序)</h3>
+        <div id="echartradar"></div>
+    </div>
+    <div class="chart-box">
+        <h3>Chart.js radar圖(Data採順時鐘順序)</h3>
+        <canvas id="chartradar"></canvas>
+    </div>
+
+    <!-- TODO -->
+ 
+  </div> 
+
+  <script>
+    const { createApp, onMounted, ref ,markRaw,toRaw} = Vue;
+
+    createApp({
+      setup() {
+
+        const lastUpdate = ref(new Date().toLocaleString());
+
+        //TODO:
+        //for ECharts
+        const lineEChart = ref(null);
+        const barEChart = ref(null);
+        const pieEChart = ref(null);
+        const doughnutEChart = ref(null);
+        const gaugeEChart = ref(null);
+        const radarEChart = ref(null);
+       
+        //for Charts
+        const lineChart = ref(null);
+        const barChart = ref(null);
+        const pieChart = ref(null);
+        const doughnutChart = ref(null);
+        const gaugeChart = ref(null);
+        const radarChart = ref(null);
+        
+        // 初始數據
+        const lineData = ref([60, 60, 30, 40, 50,10]);
+        const pieData = ref([25, 35, 40]);
+        const initialData = [
+                { value: 1048, name: '智能手機' },
+                { value: 735, name: '筆記本電腦' },
+ //               { value: 580, name: '平板電腦' },
+ //               { value: 484, name: '智能手錶' },
+                { value: 300, name: '其他' }
+                ];
+        const chartData = ref([...initialData]);
+
+ //       console.log(lineData);
+ //       console.log(lineData._rawvalue);
+
+        const updateCharts = () => {
+            console.log('updateCharts');
+            lastUpdate.value = new Date().toLocaleString();
+            // 更新折線圖資料
+            const newVal = Math.floor(Math.random() * 100);
+            lineData.value.shift();
+            lineData.value.push(newVal);
+            // 更新圓餅圖資料
+            pieData.value = [
+                Math.floor(Math.random() * 50 + 10),
+                Math.floor(Math.random() * 50 + 10),
+                Math.floor(Math.random() * 50 + 10)
+            ];
+            console.log(lineData.value);
+        
+            // TODO:
+            //更新ECharts            
+            lineEChart.value.setOption({
+                series: [{
+                data: lineData.value
+                }]
+            });
+            barEChart.value.setOption({
+                series: [{
+                data: lineData.value
+                }]
+            }); 
+            pieEChart.value.setOption({
+                series: [{
+                data: pieData.value
+                }]
+            }); 
+            doughnutEChart.value.setOption({
+                series: [{
+                data: pieData.value
+                }]
+            }); 
+            gaugeEChart.value.setOption({
+                series: [
+                    {
+                    type: 'gauge',
+                    progress: {
+                        show: true,
+                        width: 18
+                    },
+                    axisLine: {
+                        lineStyle: {
+                        width: 18
+                        }
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    splitLine: {
+                        length: 15,
+                        lineStyle: {
+                        width: 2,
+                        color: '#999'
+                        }
+                    },
+                    axisLabel: {
+                        distance: 25,
+                        color: '#999',
+                        fontSize: 20
+                    },
+                    anchor: {
+                        show: true,
+                        showAbove: true,
+                        size: 25,
+                        itemStyle: {
+                        borderWidth: 10
+                        }
+                    },
+                    title: {
+                        show: false
+                    },
+                    detail: {
+                        valueAnimation: true,
+                        fontSize: 80,
+                        offsetCenter: [0, '70%']
+                    },
+                    data: [
+                        {
+                        value: pieData.value[0],
+                        }
+                    ]
+                    }
+                ]
+            });             
+            radarEChart.value.setOption({
+                title: {
+                    text: 'Basic Radar Chart'
+                },
+                legend: {
+                    data: ['Allocated Budget', 'Actual Spending']
+                },
+                radar: {
+                    // shape: 'circle',
+                    indicator: [ //逆時鐘順序
+                    { name: 'A', max: 100 },
+                    { name: 'B', max: 100 },
+                    { name: 'C', max: 100 },
+                    { name: 'D', max: 100 },
+                    { name: 'E', max: 100 },
+                    { name: 'F', max: 100 }
+                    ]
+                },
+                series: [
+                    {
+                    name: 'Budget vs spending',
+                    type: 'radar',
+                    data: [
+                        {
+                        value: toRaw(lineData.value), //[4200, 3000, 20000, 35000, 50000, 18000], 
+                        name: 'Allocated Budget'
+                        },
+                        {
+                        value: [100, 100, 100, 100, 100, 100],
+                        name: 'Full'
+                        }
+                    ]
+                    }
+                ]
+            });    
+            //更新Charts                   
+            lineChart.value.data.datasets[0].data = toRaw(lineData.value);
+            lineChart.value.update();
+            barChart.value.data.datasets[0].data = toRaw(lineData.value);
+            barChart.value.update();
+            pieChart.value.data.datasets[0].data = toRaw(pieData.value);
+            pieChart.value.update();
+            doughnutChart.value.data.datasets[0].data = toRaw(pieData.value);
+            doughnutChart.value.update();
+
+            radarChart.value.data.datasets[0].data = toRaw(lineData.value);
+            radarChart.value.update();
+            //TODO:
+            //gaugeChart.value.data.datasets[0].data = toRaw(pieData.value);
+            //gaugeChart.value.update();
+
+
+        };
+        const InitECharts = () => {
+            console.log("InitECharts");
+            // 初始化 ECharts 折線圖
+            const echartDom = document.getElementById('echartline');
+            lineEChart.value = echarts.init(echartDom);
+            lineEChart.value.setOption({
+                xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E','F'] },
+                yAxis: { type: 'value' },
+                series: [{ type: 'line', data: lineData.value }]
+            });
+            // 初始化 ECharts 直條圖
+            const echartDom1 = document.getElementById('echartbar');
+            barEChart.value = echarts.init(echartDom1);
+            barEChart.value.setOption({
+                xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E','F'] },
+                yAxis: { type: 'value' },
+                series: [{ type: 'bar', data: lineData.value }]
+            });
+
+
+            // 初始化 ECharts 直條圖
+            const echartDom2 = document.getElementById('echartpie');
+            pieEChart.value = echarts.init(echartDom2);
+            pieEChart.value.setOption({
+                // title: {
+                // text: '銷售佔比',
+                // subtext: '2023年數據',
+                // left: 'center'
+                // },
+                // tooltip: {
+                // trigger: 'item',
+                // formatter: '{a} <br/>{b}: {c} ({d}%)'
+                // },
+                // legend: {
+                // orient: 'vertical',
+                // left: 'left',
+                // data: chartData.value.map(item => item.name)
+                // },
+                series: [
+                {
+                    name: '銷售額',
+                    type: 'pie',
+                    radius: ['0%', '100%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                    },
+                    label: {
+                    show: false,
+                    position: 'center'
+                    },
+                    emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: '18',
+                        fontWeight: 'bold'
+                    }
+                    },
+                    labelLine: {
+                    show: false
+                    },
+                    data: chartData.value
+                }
+                ]
+            });
+            
+            // 初始化 ECharts 直條圖
+            const echartDom3 = document.getElementById('echartdoughnut');
+            doughnutEChart.value = echarts.init(echartDom3);
+            doughnutEChart.value.setOption({
+                // title: {
+                // text: '銷售佔比',
+                // subtext: '2023年數據',
+                // left: 'center'
+                // },
+                // tooltip: {
+                // trigger: 'item',
+                // formatter: '{a} <br/>{b}: {c} ({d}%)'
+                // },
+                // legend: {
+                // orient: 'vertical',
+                // left: 'left',
+                // data: chartData.value.map(item => item.name)
+                // },
+                series: [
+                {
+                    name: '銷售額',
+                    type: 'pie',
+                    radius: ['50%', '100%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                    },
+                    label: {
+                    show: true,
+                    position: 'center'
+                    },
+                    emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: '18',
+                        fontWeight: 'bold'
+                    }
+                    },
+                    labelLine: {
+                    show: false
+                    },
+                    data: chartData.value
+                }
+                ]
+            });
+
+            // 初始化 ECharts Gauge圖
+            const echartDom4 = document.getElementById('echartgauge');
+            gaugeEChart.value = echarts.init(echartDom4);
+            gaugeEChart.value.setOption({
+                series: [
+                    {
+                    type: 'gauge',
+                    progress: {
+                        show: true,
+                        width: 18
+                    },
+                    axisLine: {
+                        lineStyle: {
+                        width: 18
+                        }
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    splitLine: {
+                        length: 15,
+                        lineStyle: {
+                        width: 2,
+                        color: '#999'
+                        }
+                    },
+                    axisLabel: {
+                        distance: 25,
+                        color: '#999',
+                        fontSize: 20
+                    },
+                    anchor: {
+                        show: true,
+                        showAbove: true,
+                        size: 25,
+                        itemStyle: {
+                        borderWidth: 10
+                        }
+                    },
+                    title: {
+                        show: false
+                    },
+                    detail: {
+                        valueAnimation: true,
+                        fontSize: 80,
+                        offsetCenter: [0, '70%']
+                    },
+                    data: [
+                        {
+                        value: 70
+                        }
+                    ]
+                    }
+                ]
+            //   series: [{
+            //     type: 'gauge',
+            //     center: ['50%', '60%'],
+            //     startAngle: 180,
+            //     endAngle: 0,
+            //     min: 0,
+            //     max: 100,
+            //     splitNumber: 10,
+            //     radius: '90%',
+            //     axisLine: {
+            //       lineStyle: {
+            //         width: 30,
+            //         color: [
+            //           [0.3, '#67e0e3'],
+            //           [0.7, '#37a2da'],
+            //           [1, '#fd666d']
+            //         ]
+            //       }
+            //     },
+            //     pointer: {
+            //       icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+            //       length: '12%',
+            //       width: 20,
+            //       offsetCenter: [0, '-60%'],
+            //       itemStyle: {
+            //         color: 'auto'
+            //       }
+            //     },
+            //     axisTick: {
+            //       length: 12,
+            //       lineStyle: {
+            //         color: 'auto',
+            //         width: 2
+            //       }
+            //     },
+            //     splitLine: {
+            //       length: 20,
+            //       lineStyle: {
+            //         color: 'auto',
+            //         width: 5
+            //       }
+            //     },
+            //     axisLabel: {
+            //       color: '#464646',
+            //       fontSize: 12,
+            //       distance: -60,
+            //       formatter: function(value) {
+            //         if (value === 0) {
+            //           return '低';
+            //         } else if (value === 50) {
+            //           return '中';
+            //         } else if (value === 100) {
+            //           return '高';
+            //         }
+            //         return '';
+            //       }
+            //     },
+            //     title: {
+            //       offsetCenter: [0, '-20%'],
+            //       fontSize: 20
+            //     },
+            //     detail: {
+            //       fontSize: 30,
+            //       offsetCenter: [0, '0%'],
+            //       valueAnimation: true,
+            //       formatter: '{value}%',
+            //       color: 'inherit'
+            //     },
+            //     data: [{
+            //       value: 30,
+            //       name: '系統壓力'
+            //     }]
+            //   }]
+            });
+            // 初始化 ECharts Radar圖
+            const echartDom5 = document.getElementById('echartradar');
+            radarEChart.value = echarts.init(echartDom5);
+            radarEChart.value.setOption({
+                title: {
+                    text: 'Basic Radar Chart'
+                },
+                legend: {
+                    data: ['Allocated Budget', 'Actual Spending']
+                },
+                radar: {
+                    // shape: 'circle',
+                    indicator: [
+                    { name: 'Sales', max: 6500 },
+                    { name: 'Administration', max: 16000 },
+                    { name: 'Information Technology', max: 30000 },
+                    { name: 'Customer Support', max: 38000 },
+                    { name: 'Development', max: 52000 },
+                    { name: 'Marketing', max: 25000 }
+                    ]
+                },
+                series: [
+                    {
+                    name: 'Budget vs spending',
+                    type: 'radar',
+                    data: [
+                        {
+                        value: [4200, 3000, 20000, 35000, 50000, 18000],
+                        name: 'Allocated Budget'
+                        },
+                        {
+                        value: [5000, 14000, 28000, 26000, 42000, 21000],
+                        name: 'Actual Spending'
+                        }
+                    ]
+                    }
+                ]
+            });
+            // TODO:
+
+        }
+
+        const InitCharts = () => {
+            console.log("InitCharts");
+            // 初始化 Chart.js 折線圖
+            const linechartctx = document.getElementById('chartline').getContext('2d');
+            const linechartchart = new Chart(linechartctx, {
+                type: 'line',
+                data: {
+                    labels: ['A', 'B', 'C', 'D', 'E','F'],
+                    datasets: [{
+                        label: '收入 (千元)',
+                        data: toRaw(lineData.value), //[lineData.value[0],lineData.value[1],lineData.value[2],lineData.value[3],lineData.value[4],lineData.value[5]],
+                        fill: false,
+                        borderColor: '#4361ee',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                  responsive: false,
+                  maintainAspectRatio: false
+                }
+            });
+            // hint : https://stackoverflow.com/questions/68560025/unexpected-error-when-attempting-to-update-chart-data-in-chart-js-in-a-vue-app
+            lineChart.value=markRaw(linechartchart);
+
+            // 初始化 Chart.js 直條圖
+            const barchartctx = document.getElementById('chartbar').getContext('2d');
+            const barchartchart = new Chart(barchartctx, {
+                type: 'bar',
+                data: {
+                    labels: ['A', 'B', 'C', 'D', 'E','F'],
+                    datasets: [{
+                        label: '收入 (千元)',
+                        data: toRaw(lineData.value), //[lineData.value[0],lineData.value[1],lineData.value[2],lineData.value[3],lineData.value[4],lineData.value[5]],
+                        fill: false,
+                        borderColor: '#4361ee',
+                        tension: 0.1
+                    }]
+                },
+                // options: {
+                //   responsive: false,
+                //   maintainAspectRatio: false
+                // }
+            });
+            // hint : https://stackoverflow.com/questions/68560025/unexpected-error-when-attempting-to-update-chart-data-in-chart-js-in-a-vue-app
+            barChart.value=markRaw(barchartchart);
+
+            // 初始化 Chart.js 圓餅圖
+            const piechartctx = document.getElementById('chartpie').getContext('2d');
+            const piechartchart = new Chart(piechartctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Red', 'Blue', 'Yellow'],
+                    datasets: [{
+                        label: 'Sample Pie',
+                        data: pieData.value,
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
+                    }]
+                }
+            });
+            // hint : https://stackoverflow.com/questions/68560025/unexpected-error-when-attempting-to-update-chart-data-in-chart-js-in-a-vue-app
+            pieChart.value=markRaw(piechartchart);
+
+
+            // 初始化 Chart.js 甜甜圈圖
+            const doughnutchartctx = document.getElementById('chartdoughnut').getContext('2d');
+            const doughnutchartchart = new Chart(doughnutchartctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['新用戶', '回訪用戶', 'VIP用戶'],
+                    datasets: [{
+                    data: pieData.value, //[25, 55, 20],
+                    backgroundColor: [
+                        '#4cc9f0',
+                        '#4361ee',
+                        '#f72585'
+                    ]
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false
+                }
+            });   
+            // hint : https://stackoverflow.com/questions/68560025/unexpected-error-when-attempting-to-update-chart-data-in-chart-js-in-a-vue-app
+            doughnutChart.value=markRaw(doughnutchartchart);
+
+            // 初始化 Chart.js radar圖
+            const radarchartctx = document.getElementById('chartradar').getContext('2d');
+            const radarchartchart = new Chart(radarchartctx, {
+                type: 'radar',
+                data: {
+                    labels: ['A', 'B', 'C', 'D', 'E','F'],
+                    datasets: [{
+                        label: '系統指標',
+                        data: toRaw(lineData.value),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)'
+                    },
+                    {
+                        label: 'Full',
+                        data: [100,100,100,100,100,100],
+                        backgroundColor: 'rgba(256, 162, 235, 0.2)'
+                    }]
+                }        
+            });   
+            // hint : https://stackoverflow.com/questions/68560025/unexpected-error-when-attempting-to-update-chart-data-in-chart-js-in-a-vue-app
+            radarChart.value=markRaw(radarchartchart);
+
+
+
+
+            //TODO:
+            //Error: "gauge" is not a registered controller.
+            // var gaugechartctx = document.getElementById("chartgauge").getContext("2d");
+            // var gaugechartchart = new Chart(gaugechartctx, {
+            //     type: 'gauge',
+            //     data: {
+            //         datasets: [{
+            //         value: 0.5,
+            //         minValue: 0,
+            //         data: [1, 2, 3, 4],
+            //         backgroundColor: ['green', 'yellow', 'orange', 'red'],
+            //         }]
+            //     },
+            //     options: {
+            //         needle: {
+            //         radiusPercentage: 2,
+            //         widthPercentage: 3.2,
+            //         lengthPercentage: 80,
+            //         color: 'rgba(0, 0, 0, 1)'
+            //         },
+            //         valueLabel: {
+            //         display: true,
+            //         formatter: (value) => {
+            //             return '$' + Math.round(value);
+            //         },
+            //         color: 'rgba(255, 255, 255, 1)',
+            //         backgroundColor: 'rgba(0, 0, 0, 1)',
+            //         borderRadius: 5,
+            //         padding: {
+            //             top: 10,
+            //             bottom: 10
+            //         }
+            //         }
+            //     }
+            // });
+            // // hint : https://stackoverflow.com/questions/68560025/unexpected-error-when-attempting-to-update-chart-data-in-chart-js-in-a-vue-app
+            // dgaugehart.value=markRaw(gaugechartchart);
+
+
+
+        }
+
+
+        onMounted(() => {
+            InitCharts();
+            InitECharts();
+            // 每 2 秒更新資料
+            setInterval(updateCharts, 1000);
+        });
+
+        return {
+            lastUpdate //網頁有使用
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
