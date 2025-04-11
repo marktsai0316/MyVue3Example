@@ -14,5 +14,7 @@
 ### vue3chartjs.html
 ![image](https://github.com/user-attachments/assets/814cdb20-420d-456f-8915-03911dfc97e9)
 
+### vue3_Echarts_Chartjs.html
+![image](https://github.com/user-attachments/assets/851f21d7-89a4-4762-9dab-4e48ce7d0356)
 
 
