@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>localStorage 跨應用通信</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    .app-container {
+      margin: 20px;
+      padding: 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      max-width: 500px;
+    }
+    #app1 { background-color: #f0f8ff; }
+    #app2 { background-color: #fff0f5; }
+    input { padding: 8px; width: 300px; }
+    p { font-weight: bold; color: #333; }
+  </style>
+</head>
+<body>
+  <!-- 應用1：顯示並可編輯消息 -->
+  <div id="app1" class="app-container">
+    <h2>應用 1 (編輯者)</h2>
+    <input v-model="localMessage" @input="updateStorage">
+    <p>來自應用2的數據: <span style="color:red">{{ receivedMessage }}</span></p>
+  </div>
+
+  <!-- 應用2：顯示並可編輯消息 -->
+  <div id="app2" class="app-container">
+    <h2>應用 2 (編輯者)</h2>
+    <input v-model="localMessage" @input="updateStorage">
+    <p>來自應用1的數據: <span style="color:blue">{{ receivedMessage }}</span></p>
+  </div>
+
+  <script>
+    // 共享配置
+    const STORAGE_KEY = 'vue-apps-communication';
+    
+    // 應用1
+    const app1 = Vue.createApp({
+      data() {
+        console.log('app1:data()');  
+        return {
+          localMessage: '',
+          receivedMessage: ''
+        }
+      },
+      setup() {
+        console.log('app1:setup()');  
+        // // 處理視窗大小變化
+        // const handleResize = () => {
+        //     console.log('handleResize()');  
+        //     //windowWidth.value = window.innerWidth;
+        //     //windowHeight.value = window.innerHeight;
+        // };
+       // 組件掛載時
+        Vue.onMounted(() => {
+          console.log('app1:onMountedhook()');  
+        //   // 添加視窗大小監聽器
+        //   window.addEventListener('resize', handleResize);
+        });
+        
+        // 組件卸載時
+        Vue.onUnmounted(() => {
+          console.log('app1:onUnmountedhook()');  
+        //   // 移除視窗大小監聽器
+        //   window.removeEventListener('resize', handleResize);
+        });
+        return {
+             }
+      },       
+      mounted() {
+        console.log('app1:mounted()');  
+        // 添加視窗大小監聽器
+        //https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event
+        window.addEventListener('resize', this.handleResize);
+    // 初始化讀取
+        this.readFromStorage();
+        // 監聽 storage 事件
+        //https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+        window.addEventListener('storage', this.handleStorageEvent);
+      },
+      unmounted() {
+        console.log('app1:unmounted()');  
+        // 添加視窗大小監聽器
+        window.removeEventListener('resize', this.handleResize);
+    // 初始化讀取
+        this.readFromStorage();
+        // 監聽 storage 事件
+        window.removeEventListener('storage', this.handleStorageEvent);
+      },
+      methods: {
+        updateStorage() {
+          console.log('app1:updateStorage()');
+          const data = { 
+            app1: this.localMessage,
+            timestamp: new Date().getTime() 
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        },
+        readFromStorage() {
+            console.log('app1:readFromStorage()');
+            const rawData = localStorage.getItem(STORAGE_KEY);
+          if (rawData) {
+            const data = JSON.parse(rawData);
+            this.receivedMessage = data.app2 || '';
+          }
+        },
+        handleStorageEvent(event) {
+            console.log('app1:handleStorageEvent()');
+            if (event.key === STORAGE_KEY) {
+            const newData = JSON.parse(event.newValue);
+            // 避免自己觸發的事件
+            if (newData.timestamp !== this.lastTimestamp) {
+              this.receivedMessage = newData.app2 || '';
+            }
+          }
+        },
+        // 處理視窗大小變化
+        handleResize(event) {
+          console.log('handleResize()');  
+          //windowWidth.value = window.innerWidth;
+          //windowHeight.value = window.innerHeight;
+        }
+
+      },
+      beforeUnmount() {
+        console.log('app1:beforeUnmount()');  
+        window.removeEventListener('storage', this.handleStorageEvent);
+      }
+    }).mount('#app1');
+
+    // 應用2
+    const app2 = Vue.createApp({
+      data() {
+        return {
+          localMessage: '',
+          receivedMessage: ''
+        }
+      },
+      mounted() {
+        console.log('app2:mounted()');  
+        this.readFromStorage();
+        window.addEventListener('storage', this.handleStorageEvent);
+      },
+      methods: {
+        updateStorage() {
+          console.log('app2:updateStorage()');  
+          const data = { 
+            app2: this.localMessage,
+            timestamp: new Date().getTime() 
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        },
+        readFromStorage() {
+            console.log('app2:readFromStorage()');  
+            const rawData = localStorage.getItem(STORAGE_KEY);
+          if (rawData) {
+            const data = JSON.parse(rawData);
+            this.receivedMessage = data.app1 || '';
+          }
+        },
+        handleStorageEvent(event) {
+            console.log('app2:handleStorageEvent()');  
+            if (event.key === STORAGE_KEY) {
+            const newData = JSON.parse(event.newValue);
+            if (newData.timestamp !== this.lastTimestamp) {
+              this.receivedMessage = newData.app1 || '';
+            }
+          }
+        }
+      },
+      beforeUnmount() {
+        console.log('app2:beforeUnmount()');  
+        window.removeEventListener('storage', this.handleStorageEvent);
+      }
+    }).mount('#app2');
+  </script>
+</body>
+</html>
