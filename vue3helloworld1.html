@@ -10,6 +10,8 @@
     <script>
         const App ={
             data() {
+                console.log('data()')
+                console.log(this)
                 return {
                     message: 'Hello World!!'
                 }
@@ -18,8 +20,13 @@
                 <h1>{{ message }}</h1>
             `
         };
-        const app=Vue.createApp(App).mount('#app');
+        const app=Vue.createApp(App)
         console.log(app);
+        console.log(app.$data);
+        const vm=app.mount('#app');
+        console.log(vm);
+        console.log(vm.$data);
+        //see https://www.w3schools.com/vue/vue_ref_component-instance.php      
     </script>
 </body>
 </html>
