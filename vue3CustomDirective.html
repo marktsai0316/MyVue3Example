@@ -9,15 +9,15 @@
   <div id="app"></div>
   <script>
     Vue.createApp({
-        directives: {
-            focus: {
-                // 指令的定义
-                mounted(el) {
-                    console.log('mounted')
-                    el.focus()
-                }
-            }
-        },
+        // directives: {
+        //     focus: {
+        //         // 指令的定义
+        //         mounted(el) {
+        //             console.log('mounted')
+        //             el.focus()
+        //         }
+        //     }
+        // },
         template: `
             <p>页面载入时，input 元素自动获取焦点：</p>
             <input v-focus>
