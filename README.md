@@ -26,6 +26,9 @@
 ### vue3chartjs.html
 ![image](https://github.com/user-attachments/assets/814cdb20-420d-456f-8915-03911dfc97e9)
 
+### vue3_Chartjs_line.html
+![image](https://github.com/user-attachments/assets/d99fb718-fa24-4b78-976b-ed01012ab92d)
+
 ### vue3_Echarts_Chartjs.html
 ![image](https://github.com/user-attachments/assets/851f21d7-89a4-4762-9dab-4e48ce7d0356)
 
