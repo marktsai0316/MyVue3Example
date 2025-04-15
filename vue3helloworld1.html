@@ -8,21 +8,43 @@
 <body>
     <div id="app"> </div>
     <script>
+        const { createApp, ref, onMounted, onUnmounted } = Vue
+
         const App ={
             data() {
                 console.log('data()')
                 console.log(this)
                 return {
-                    message: 'Hello World!!'
+                    count : 33,
+                    message: 'Hello from data!'
+                }
+            },
+            methods: {
+                increment() {
+                    console.log('(optionsApi) increment()');
+                    this.count++
                 }
             },
             template: `
                 <h1>{{ message }}</h1>
-            `
+                <button @click="increment">Count: {{ count }}</button>
+            `,
+            // setup()
+            // {
+            //     console.log('setup()')
+            //     const message = ref('Hello from setup!')
+            //     const count = ref(33)
+            //     const increment = () => { console.log('(compositionApi) increment()');count.value++ }
+            //     return {
+            //         message, 
+            //         count,
+            //         increment,
+            //     }
+            // }
         };
-        const app=Vue.createApp(App)
-        console.log(app);
-        console.log(app.$data);
+        const app=createApp(App)
+       // console.log(app);
+       // console.log(app.$data);
         const vm=app.mount('#app');
         console.log(vm);
         console.log(vm.$data);
