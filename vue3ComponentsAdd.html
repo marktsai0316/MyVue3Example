@@ -212,16 +212,16 @@
       `,
       setup() {
         const currentTime = ref('')
-        const windowWidth = ref(window.innerWidth)
         let timer = null
-
         const updateTime = () => {
           currentTime.value = new Date().toLocaleTimeString()
         }
 
+        const windowWidth = ref(window.innerWidth)
         const handleResize = () => {
           windowWidth.value = window.innerWidth
         }
+
         onMounted(() => {
           console.log('時間組件已掛載')
           timer = setInterval(updateTime, 1000)
@@ -235,10 +235,10 @@
         })
 
         const isOnline = ref(navigator.onLine)
-
         const updateNetworkStatus = () => {
           isOnline.value = navigator.onLine
         }
+        
         onMounted(() => {
           window.addEventListener('online', updateNetworkStatus)
           window.addEventListener('offline', updateNetworkStatus)
