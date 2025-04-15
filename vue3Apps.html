@@ -32,49 +32,53 @@
 <body>
   <!-- 第一個 Vue 應用程式掛載點 -->
   <div id="app1" class="app-container">
-    <h2>App 1 - 計數器</h2>
-    <p>計數: {{ count }}</p>
-    <button @click="increment">增加</button>
-    <button @click="reset">重置</button>
   </div>
 
   <!-- 第二個 Vue 應用程式掛載點 -->
   <div id="app2" class="app-container">
-    <h2>App 2 - 訊息反轉</h2>
-    <input v-model="message" placeholder="輸入訊息">
-    <p>反轉訊息: {{ reversedMessage }}</p>
   </div>
 
   <script>
     // 第一個 Vue 應用程式
     const app1 = Vue.createApp({
-      data() {
-        return {
-          count: 0
-        }
-      },
-      methods: {
-        increment() {
-          this.count++
+        template: `
+            <h2>App 1 - 計數器</h2>
+            <p>計數: {{ count }}</p>
+            <button @click="increment">增加</button>
+            <button @click="reset">重置</button>
+        `,
+        data() {
+            return {
+            count: 0
+            }
         },
-        reset() {
-          this.count = 0
+        methods: {
+            increment() {
+            this.count++
+            },
+            reset() {
+            this.count = 0
+            }
         }
-      }
     }).mount('#app1')
 
     // 第二個 Vue 應用程式
     const app2 = Vue.createApp({
-      data() {
-        return {
-          message: ''
+        template: `
+            <h2>App 2 - 訊息反轉</h2>
+            <input v-model="message" placeholder="輸入訊息">
+            <p>反轉訊息: {{ reversedMessage }}</p>
+        `,
+        data() {
+            return {
+            message: ''
+            }
+        },
+        computed: {
+            reversedMessage() {
+            return this.message.split('').reverse().join('')
+            }
         }
-      },
-      computed: {
-        reversedMessage() {
-          return this.message.split('').reverse().join('')
-        }
-      }
     }).mount('#app2')
   </script>
 </body>
