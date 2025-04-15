@@ -32,21 +32,11 @@
 <body>
   <!-- 第一個 Vue 應用程式掛載點 -->
   <div id="app1" class="app-container">
-    <h2>App 1 - 計數器</h2>
-    <p>(方法2)共享狀態物件：{{ sharedState.count }}</p>
-    <p>計數: {{ count }}</p>
-    <button @click="increment">增加</button>
-    <button @click="reset">重置</button>
-</div>
+  </div>
 
   <!-- 第二個 Vue 應用程式掛載點 -->
   <div id="app2" class="app-container">
-    <h2>App 2 - 訊息反轉</h2>
-    <input v-model="message" placeholder="輸入訊息">
-    <p>反轉訊息: {{ reversedMessage }}</p>
-    <button @click="sendCount">(方法1)同步到 App1</button>
-    <button @click="sharedState.count++">(方法2)增加</button>
-</div>
+  </div>
 
   <script>
     //方法1 :
@@ -67,6 +57,13 @@
 
    // 第一個 Vue 應用程式
     const app1 = Vue.createApp({
+      template: `
+        <h2>App 1 - 計數器</h2>
+        <p>(方法2)共享狀態物件：{{ sharedState.count }}</p>
+        <p>計數: {{ count }}</p>
+        <button @click="increment">增加</button>
+        <button @click="reset">重置</button>
+      `,
       data() {
         console.log('data()');
         return {
@@ -94,6 +91,13 @@
 
     // 第二個 Vue 應用程式
     const app2 = Vue.createApp({
+      template: `
+        <h2>App 2 - 訊息反轉</h2>
+        <input v-model="message" placeholder="輸入訊息">
+        <p>反轉訊息: {{ reversedMessage }}</p>
+        <button @click="sendCount">(方法1)同步到 App1</button>
+        <button @click="sharedState.count++">(方法2)增加</button>
+      `,
       data() {
         return {
           message: ''
