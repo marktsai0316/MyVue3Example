@@ -99,6 +99,7 @@
 
         createApp({
             setup() {
+                const lineData = ref([60, 60, 30, 40, 50,10]);
                 const updateTime = ref(new Date().toLocaleString());
                 const lineChart = ref(null);
                 const barChart = ref(null);
@@ -125,7 +126,7 @@
                         },
                         yAxis: { type: 'value' },
                         series: [{
-                            data: [820, 932, 901, 934, 1290, 1330],
+                            data:  lineData.value,
                             type: 'line',
                             smooth: true
                         }]
@@ -204,7 +205,9 @@
 
                 // 數據更新方法
                 const updateCharts = (newData) => {
-                    console.log("updateCharts")
+                    console.log('updateCharts');
+                    updateTime.value = new Date().toLocaleString();
+            // 更新折線圖資料
                     // 更新摘要卡片
                     summaryData.value = newData.summary;
                     
@@ -238,7 +241,7 @@
                     try {
                         isLoading.value = true;
                         const newData = generateRandomData();
-                        updateTime.value = new Date().toLocaleString();
+                        //updateTime.value = new Date().toLocaleString();
                         updateCharts(newData);
                     } finally {
                         isLoading.value = false;
@@ -254,7 +257,8 @@
                 onMounted(() => {
                     initCharts();
                     window.addEventListener('resize', handleResize);
-                    startAutoRefresh(); // 啟動自動更新
+                    
+                    intervalId = setInterval(refreshData, 1000);
                 });
 
                 onBeforeUnmount(() => {

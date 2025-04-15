@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vue3 + ECharts + Chart.js Dashboard</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+    }
+    #app {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 20px;
+    }
+    .chart-box {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 16px;
+    }
+    /* TODO */
+    canvas, #echartline,#echartbar,#echartpie,#echartdoughnut,#echartgauge ,#echartradar{
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="chart-box">
+        <h3>ECharts 折線圖</h3>
+        <div id="echartline"></div>
+    </div>
+    
+  </div> 
+
+  <script>
+    const { createApp, onMounted, ref ,markRaw,toRaw} = Vue;
+
+    createApp({
+      setup() {
+
+        const lastUpdate = ref(new Date().toLocaleString());
+
+        //TODO:
+        //for ECharts
+        const lineEChart = ref(null);
+        
+       
+    
+        
+        // 初始數據
+        const lineData = ref([60, 60, 30, 40, 50,10]);
+        const pieData = ref([25, 35, 40]);
+        const initialData = [
+                { value: 1048, name: '智能手機' },
+                { value: 735, name: '筆記本電腦' },
+ //               { value: 580, name: '平板電腦' },
+ //               { value: 484, name: '智能手錶' },
+                { value: 300, name: '其他' }
+                ];
+        const chartData = ref([...initialData]);
+
+ //       console.log(lineData);
+ //       console.log(lineData._rawvalue);
+
+        const updateCharts = () => {
+            console.log('updateCharts');
+            lastUpdate.value = new Date().toLocaleString();
+            // 更新折線圖資料
+            const newVal = Math.floor(Math.random() * 100);
+            lineData.value.shift();
+            lineData.value.push(newVal);
+            // 更新圓餅圖資料
+            pieData.value = [
+                Math.floor(Math.random() * 50 + 10),
+                Math.floor(Math.random() * 50 + 10),
+                Math.floor(Math.random() * 50 + 10)
+            ];
+            console.log(lineData.value);
+        
+            // TODO:
+            //更新ECharts            
+            lineEChart.value.setOption({
+                series: [{
+                data: lineData.value
+                }]
+            });
+           
+
+        };
+        const InitECharts = () => {
+            console.log("InitECharts");
+            // 初始化 ECharts 折線圖
+            const echartDom = document.getElementById('echartline');
+            lineEChart.value = echarts.init(echartDom);
+            lineEChart.value.setOption({
+                xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E','F'] },
+                yAxis: { type: 'value' },
+                series: [{ type: 'line', data: lineData.value }]
+            });
+
+
+        }
+
+
+        onMounted(() => {
+            InitECharts();
+            // 每 2 秒更新資料
+            setInterval(updateCharts, 1000);
+        });
+
+        return {
+            lastUpdate //網頁有使用
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
