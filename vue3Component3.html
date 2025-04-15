@@ -13,27 +13,24 @@
             template: `
                 <h1>component1</h1>
             `,
-            setup() {
-                return {
-                }
+            data() {
+                return {}
             }
         }    
         const BComponent = {
             template: `
                 <h1>component2</h1>
             `,
-            setup() {
-                return {
-                }
+            data() {
+                return {}
             }
         }    
         const CComponent = {
             template: `
                 <h1>component3</h1>
             `,
-            setup() {
-                return {
-                }
+            data() {
+                return {}
             }
         }    
         const app=Vue.createApp({
@@ -44,8 +41,7 @@
                           BComponent,
                           CComponent },
             data() {
-                return {
-                }
+                return {}
             },
             template: `
                 <h1>rootcomponent</h1>
@@ -54,10 +50,6 @@
                 <c-component></c-component>
             `
             ,
-            setup() {
-                return {
-                }
-            }
         })
         // app.component('a-component', {
         //         template: '<h1>a-component</h1>'
