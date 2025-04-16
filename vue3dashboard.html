@@ -727,7 +727,7 @@
             </div>
           </div>
           <!-- <div class="chart-container" ref="chartDom"></div> -->
-          <h1>CPU Usage 监控</h1>
+          <h1>Usage 监控</h1>
           <div class="charts-row">
             <div class="chart-container">
                 <div class="chart" ref="lineChartDom"></div>
@@ -1162,9 +1162,20 @@
         const lineChartDom = ref(null);
         const lineChart = ref(null);
         const cpuData = ref([]);
-        const displayDuration = ref(30000); // 默认显示30秒数据
+       
+    
+        const now1 = new Date(); // 現在時間
+        
+        for (let i = 120; i > 0; i--) {
+          const oneMinuteAgo = new Date(now1.getTime() - i * 800); // 減去 60 秒（1分鐘）
+          //console.log(oneMinuteAgo);
+          cpuData.value.push([oneMinuteAgo, 0]); //share
+         }
+        //cpuData.value.push([oneMinuteAgo, 0]); //share
+        //cpuData.value.push([now1, 0]); //share
+        const displayDuration = ref(60000); // 默认显示30秒数据
         const markData=200;
-     
+        
         function initChart() {
           //const chartDom = document.getElementById('echartline');
           const chartDom = lineChartDom.value
@@ -1182,10 +1193,53 @@
           const option = {
             animation: false,            
             title: { text: '範例圖表' },
-            tooltip: {},
-            xAxis: { type: 'time',data: ['A', 'B', 'C', 'D'] },
+            toolbox: {
+              show: true,
+              feature: {
+                dataZoom: {
+                  yAxisIndex: 'none'
+                },
+                dataView: { readOnly: false },
+                magicType: { type: ['line', 'bar'] },
+                restore: {},
+                saveAsImage: {}
+              }
+            },
+            tooltip: {
+              trigger: 'axis',
+              formatter: function (params) {
+                console.log(params);
+              //  params = params[0];
+              //  var date = new Date(params.name);
+                return (
+                //  date.getDate() +
+                //  '/' +
+                //  (date.getMonth() + 1) +
+                //  '/' +
+                //  date.getFullYear() +
+                //  ' : ' +
+                //  params.value[1]
+                "hhh"
+                );
+              },
+              axisPointer: {
+                animation: false
+              }
+            },
+//            tooltip: {},
+            xAxis: { 
+              type: 'time' ,
+              data: ['A', 'B', 'C', 'D'],
+              splitLine: {
+                show: false
+              }
+            },
             yAxis: {},
-            series: [{ type: 'line', data: cpuData.value ,smooth : true,}],
+            series: [{ type: 'line', 
+                       data: cpuData.value ,
+                       //smooth : true,
+                       showSymbol: false
+                      }],
             
           };
           instance.setOption(option);
@@ -1304,6 +1358,7 @@
             //console.log('updateChartData',lineChart.value);
             //console.log('updateChartData1',cpuData);
             const now = new Date();
+           // console.log(now)
             const usage = getCpuUsage();
             
             // 添加新数据点
@@ -1316,7 +1371,7 @@
             console.log('updateChartData2',cpuData.value.length)
 
 
-            updateTime.value = new Date().toLocaleString();
+    //        updateTime.value = new Date().toLocaleString();
     // 更新折線圖資料
             // 更新摘要卡片
             //summaryData.value = newData.summary;
@@ -1325,7 +1380,7 @@
             lineChart.value.setOption({
                 series: [{
                     data: cpuData.value,
-                    type: 'line',
+                    //type: 'line',
                     //smooth: true
                 }]
             });
@@ -1340,7 +1395,7 @@
           //InitPerformancePage();
           //InitGpuPage();
           // 每 2 秒更新資料
-          setInterval(updateCharts, 100);
+          setInterval(updateCharts, 2000);
           setInterval(updateTime, 1000)
           window.addEventListener('online', updateNetworkStatus)
           window.addEventListener('offline', updateNetworkStatus)
