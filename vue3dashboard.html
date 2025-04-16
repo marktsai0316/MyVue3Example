@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue 3 Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <!-- 引入 Font Awesome 圖標 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --info: #4895ef;
+      --warning: #f72585;
+      --danger: #e63946;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --sidebar-width: 250px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7fb;
+      color: #333;
+    }
+    
+    .dashboard {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--dark);
+      color: white;
+      padding: 20px 0;
+      transition: all 0.3s;
+    }
+    
+    .sidebar.collapsed {
+      width: 70px;
+    }
+    
+    .logo {
+      padding: 0 20px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .sidebar.collapsed .logo {
+      font-size: 16px;
+    }
+    
+    .nav-item {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item.active {
+      background: var(--primary);
+    }
+    
+    .nav-icon {
+      width: 24px;
+      text-align: center;
+      margin-right: 15px;
+    }
+    
+    .sidebar.collapsed .nav-text {
+      display: none;
+    }
+    
+    .content {
+      flex: 1;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+    
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .toggle-btn {
+      background: var(--light);
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    
+    .dashboard-title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-card-title {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .stat-card-value {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .stat-card-info {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+    
+    .stat-card-info.up {
+      color: #22c55e;
+    }
+    
+    .stat-card-info.down {
+      color: #ef4444;
+    }
+    
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .achart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            height: 400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }  
+    .achart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+   
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .chart-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .chart-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .chart-btn {
+      background: var(--light);
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .chart-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    /* SMBIOS 資訊頁面樣式 */
+    .smbios-section {
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .smbios-section h3 {
+        margin-bottom: 20px;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+    }
+    
+    .smbios-section h3 i {
+        margin-right: 10px;
+        color: #3498db;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .info-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 4px solid #3498db;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .info-row:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    
+    .info-value {
+        color: #2c3e50;
+        font-size: 0.95rem;
+        text-align: right;
+        word-break: break-word;
+    }  
+    .table-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      overflow-x: auto;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .data-table th {
+      background: #f9fafb;
+      font-weight: 600;
+    }
+    
+    .data-table tbody tr:hover {
+      background: #f5f7fb;
+    }
+    
+    .status {
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status.active {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    
+    .status.pending {
+      background: rgba(234, 179, 8, 0.1);
+      color: #eab308;
+    }
+    
+    .status.inactive {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        z-index: 10;
+        height: 100%;
+        transform: translateX(-100%);
+      }
+      
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      
+      .content {
+        margin-left: 0;
+      }
+      
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="dashboard">
+      <div class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+        <div class="logo">{{ sidebarCollapsed ? 'DB' : 'Dashboard' }}</div>
+        <div 
+          v-for="(item, index) in navItems" 
+          :key="index" 
+          class="nav-item" 
+          :class="{ active: currentPage === item.name }"
+          @click=";setActive(item.name,currentPage); currentPage = item.name">
+          <div class="nav-icon">{{ item.icon }}</div>
+          <div class="nav-text">{{ item.text }}</div>
+        </div>
+      </div>
+      <div class="content">
+        <!-- System Page -->
+        <div v-if="currentPage  === 'system'">
+          <div class="top-bar">
+            <button class="toggle-btn" @click="toggleSidebar">
+              <span>☰</span>
+            </button>
+            <div class="dashboard-title">System Info</div>
+            <div>
+              <span>{{ currentTime }}</span> <p>網路狀態：{{ isOnline ? '已連線' : '已斷線' }}</p>
+            </div>
+          </div>
+          <div class="stats-row">
+              <div class="smbios-section">
+                            <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">系統運行時間</span>
+                                <div class="card-icon" style="background-color: #3498db;">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="card-value">{{ formatTime(monitor.upTime) }}</div>
+                            <div class="card-footer">
+                                上次重啟: {{ monitor.lastReboot }}
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">CPU 使用率</span>
+                                <div class="card-icon" style="background-color: #2ecc71;">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                            </div>
+                            <div class="card-value">{{ monitor.cpuUsage }}%</div>
+                            <div class="card-footer">
+                                <span :class="monitor.cpuChange >= 0 ? 'positive' : 'negative'">
+                                    <i :class="monitor.cpuChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                                    {{ Math.abs(monitor.cpuChange) }}% 變化
+                                </span>
+                            </div>
+                        </div> 
+                        <div class="card">
+                          <div class="card-header">
+                              <span class="card-title">記憶體使用</span>
+                              <div class="card-icon" style="background-color: #e74c3c;">
+                                  <i class="fas fa-memory"></i>
+                              </div>
+                          </div>
+                          <div class="card-value">{{ monitor.memoryUsage }}%</div>
+                          <div class="card-footer">
+                              <span :class="monitor.memoryChange >= 0 ? 'positive' : 'negative'">
+                                  <i :class="monitor.memoryChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                                  {{ Math.abs(monitor.memoryChange) }}% 變化
+                              </span>
+                          </div>
+                      </div>
+                      
+                      <!-- <div class="card">
+                          <div class="card-header">
+                              <span class="card-title">風扇狀態</span>
+                              <div class="card-icon" style="background-color: #f39c12;">
+                                  <i class="fas fa-fan"></i>
+                              </div>
+                          </div>
+                          <div class="card-value">{{ runningFansCount }}/{{ fans.length }}</div>
+                          <div class="card-footer">
+                              <span v-if="criticalFansCount > 0" style="color: #e74c3c;">
+                                  <i class="fas fa-exclamation-circle"></i>
+                                  {{ criticalFansCount }} 個風扇異常
+                              </span>
+                              <span v-else style="color: #2ecc71;">
+                                  <i class="fas fa-check-circle"></i>
+                                  所有風扇正常
+                              </span>
+                          </div>
+                      </div> -->
+              </div>       
+              <!-- 硬體資訊 -->
+              <div class="smbios-section">
+                <h3><i class="fas fa-microchip"></i> 硬體資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">裝置名稱</span>
+                            <span class="info-value">{{ hardware.devicename }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">硬體型號</span>
+                            <span class="info-value">{{ hardware.boardmodel }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">記憶體</span>
+                            <span class="info-value">{{ hardware.memory }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">CPU</span>
+                            <span class="info-value">{{ hardware.cpu }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">GPU</span>
+                            <span class="info-value">{{ hardware.gpu }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Disk</span>
+                            <span class="info-value">{{ hardware.disk }}</span>
+                        </div>
+                    </div>
+                </div>
+                <h3><i class="fas fa-microchip"></i> OS資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">版本</span>
+                            <span class="info-value">{{ os.version}}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Platform</span>
+                            <span class="info-value">{{ os.platform }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- BIOS 資訊 -->
+            <div class="smbios-section">
+                <h3><i class="fas fa-microchip"></i> BIOS 資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">製造商</span>
+                            <span class="info-value">{{ smbios.bios.vendor }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">版本</span>
+                            <span class="info-value">{{ smbios.bios.version }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">發佈日期</span>
+                            <span class="info-value">{{ smbios.bios.releaseDate }}</span>
+                        </div>
+                    <!-- </div>
+                    <div class="info-card"> -->
+                        <div class="info-row">
+                            <span class="info-label">BIOS 版本</span>
+                            <span class="info-value">{{ smbios.bios.biosRevision }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">固件版本</span>
+                            <span class="info-value">{{ smbios.bios.firmwareRevision }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">ROM 大小</span>
+                            <span class="info-value">{{ smbios.bios.romSize }}</span>
+                        </div>
+                    <!-- </div>
+                    <div class="info-card"> -->
+                        <div class="info-row">
+                            <span class="info-label">特性</span>
+                            <span class="info-value">
+                                <span v-for="(feature, index) in smbios.bios.characteristics" :key="index">
+                                    {{ feature }}<br>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 系統資訊 -->
+            <div class="smbios-section">
+                <h3><i class="fas fa-server"></i> 系統資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">製造商</span>
+                            <span class="info-value">{{ smbios.system.manufacturer }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">產品名稱</span>
+                            <span class="info-value">{{ smbios.system.productName }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">版本</span>
+                            <span class="info-value">{{ smbios.system.version }}</span>
+                        </div>
+                    <!-- </div>
+                    <div class="info-card"> -->
+                        <div class="info-row">
+                            <span class="info-label">序列號</span>
+                            <span class="info-value">{{ smbios.system.serialNumber }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">UUID</span>
+                            <span class="info-value">{{ smbios.system.uuid }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">SKU 號碼</span>
+                            <span class="info-value">{{ smbios.system.skuNumber }}</span>
+                        </div>
+                    <!-- </div>
+                    <div class="info-card"> -->
+                        <div class="info-row">
+                            <span class="info-label">喚醒類型</span>
+                            <span class="info-value">{{ smbios.system.wakeUpType }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">系統類型</span>
+                            <span class="info-value">{{ smbios.system.systemType }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">電源狀態</span>
+                            <span class="info-value">{{ smbios.system.powerSupplyState }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <!-- 主機板資訊 -->
+            <div class="smbios-section">
+                <h3><i class="fas fa-desktop"></i> 主機板資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">製造商</span>
+                            <span class="info-value">{{ smbios.baseboard.manufacturer }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">產品名稱</span>
+                            <span class="info-value">{{ smbios.baseboard.product }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">版本</span>
+                            <span class="info-value">{{ smbios.baseboard.version }}</span>
+                        </div>
+                    <!-- </div>
+                    <div class="info-card"> -->
+                        <div class="info-row">
+                            <span class="info-label">序列號</span>
+                            <span class="info-value">{{ smbios.baseboard.serialNumber }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">資產標籤</span>
+                            <span class="info-value">{{ smbios.baseboard.assetTag }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">位置</span>
+                            <span class="info-value">{{ smbios.baseboard.locationInChassis }}</span>
+                        </div>
+                    <!-- </div>
+                    <div class="info-card"> -->
+                        <div class="info-row">
+                            <span class="info-label">主機板類型</span>
+                            <span class="info-value">{{ smbios.baseboard.boardType }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">特性</span>
+                            <span class="info-value">
+                                <span v-for="(feature, index) in smbios.baseboard.features" :key="index">
+                                    {{ feature }}<br>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <!-- 處理器資訊 -->
+            <div class="smbios-section">
+                <h3><i class="fas fa-microchip"></i> 處理器資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card" v-for="(processor, index) in smbios.processors" :key="index">
+                        <div class="info-row">
+                            <span class="info-label">製造商</span>
+                            <span class="info-value">{{ processor.manufacturer }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">型號</span>
+                            <span class="info-value">{{ processor.version }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">核心數</span>
+                            <span class="info-value">{{ processor.coreCount }} ({{ processor.coreEnabled }} enabled)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">線程數</span>
+                            <span class="info-value">{{ processor.threadCount }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">時脈速度</span>
+                            <span class="info-value">{{ processor.maxSpeed }} MHz (max)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">插座類型</span>
+                            <span class="info-value">{{ processor.socket }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">特性</span>
+                            <span class="info-value">
+                                <span v-for="(feature, i) in processor.features" :key="i">
+                                    {{ feature }}<br>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 記憶體資訊 -->
+            <div class="smbios-section">
+                <h3><i class="fas fa-memory"></i> 記憶體資訊</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">記憶體控制器</span>
+                            <span class="info-value">{{ smbios.memory.memoryControllers }} controllers</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">最大容量</span>
+                            <span class="info-value">{{ smbios.memory.maxCapacity }} GB</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">支援的記憶體類型</span>
+                            <span class="info-value">
+                                <span v-for="(type, index) in smbios.memory.supportedMemoryTypes" :key="index">
+                                    {{ type }}<br>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="info-card" v-for="(module, index) in smbios.memory.modules" :key="'module-'+index">
+                        <div class="info-row">
+                            <span class="info-label">插槽 {{ module.slot }}</span>
+                            <span class="info-value">{{ module.size }} GB {{ module.type }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">製造商</span>
+                            <span class="info-value">{{ module.manufacturer || '未知' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">序列號</span>
+                            <span class="info-value">{{ module.serialNumber || '未知' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">速度</span>
+                            <span class="info-value">{{ module.speed }} MHz</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">電壓</span>
+                            <span class="info-value">{{ module.voltage }} V</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+
+        </div>  
+        <!-- Performance Page -->
+        <div v-if="currentPage  === 'performance'">
+          <div class="top-bar">
+            <button class="toggle-btn" @click="toggleSidebar">
+              <span>☰</span>
+            </button>
+            <div class="dashboard-title">Performance</div>
+            <div>
+              <span>{{ currentTime }}</span> <p>網路狀態：{{ isOnline ? '已連線' : '已斷線' }}</p>
+            </div>
+          </div>
+          <!-- <div class="chart-container" ref="chartDom"></div> -->
+          <h1>CPU Usage 监控</h1>
+          <div class="charts-row">
+            <div class="chart-container">
+                <div class="chart" ref="lineChartDom"></div>
+            </div>
+          </div> 
+
+
+        </div> 
+        <!-- Sensor Page -->
+        <div v-if="currentPage  === 'sensor'">
+          <div class="top-bar">
+            <button class="toggle-btn" @click="toggleSidebar">
+              <span>☰</span>
+            </button>
+            <div class="dashboard-title">Sensor</div>
+            <div>
+              <span>{{ currentTime }}</span> <p>網路狀態：{{ isOnline ? '已連線' : '已斷線' }}</p>
+           </div>
+          </div>
+          <h2 style="margin-bottom: 20px;">風扇監控系統</h2>
+          <!-- 風扇狀態卡片 -->
+          <div class="fan-status">
+              <div class="info-card" :class="getFanStatusClass(fan)" v-for="fan in monitor.fans" :key="fan.id">
+                  <div class="fan-name">
+                      <i class="fas fa-fan" :style="{ color: fan.isRunning ? '#3498db' : '#95a5a6', transform: fan.isRunning ? 'rotate(' + (fan.speed / 10) + 'deg)' : 'none' }"></i>
+                      {{ fan.name }}
+                  </div>
+                  <div class="info-grid">
+                      <div class="info-row">
+                          <div class="info-label">轉速</div>
+                          <div class="info-value">{{ fan.speed }} RPM</div>
+                      </div>
+                      <div class="info-row">
+                          <div class="info-label">溫度</div>
+                          <div class="info-value">{{ fan.temperature }}°C</div>
+                      </div>
+                      <div class="info-row">
+                          <div class="info-label">狀態</div>
+                          <div class="info-value">{{ fan.isRunning ? '運轉中' : '停止' }}</div>
+                      </div>
+                  </div>
+                  <!-- <div class="fan-controls">
+                      <div style="flex: 1; margin-right: 10px;">
+                          <input type="range" 
+                              class="speed-slider" 
+                              min="0" 
+                              max="100" 
+                              v-model.number="fan.speed" 
+                              :disabled="!fan.isRunning">
+                  </div> -->
+<!--                                                   
+                  <button class="btn-control" 
+                          :class="fan.isRunning ? 'btn-stop' : 'btn-start'" 
+                          @click="toggleFan(fan)">
+                      {{ fan.isRunning ? '停止' : '啟動' }}
+                  </button> -->
+              </div>
+          </div>
+
+        </div>
+        <!-- Dashboard Page -->
+        <div v-if="currentPage  === 'dashboard'">
+          <div class="top-bar">
+            <button class="toggle-btn" @click="toggleSidebar">
+              <span>☰</span>
+            </button>
+            <div class="dashboard-title">儀表板總覽</div>
+            <div>
+              <span>{{ currentTime }}</span> <p>網路狀態：{{ isOnline ? '已連線' : '已斷線' }}</p>
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-container">
+            <div class="chart" ref="lineChartDom"></div>
+            <div id="echartline"></div>
+            </div>
+          </div>
+       
+          <div class="stats-row">
+            <div class="stat-card" v-for="(stat, index) in stats" :key="index">
+              <div class="stat-card-title">{{ stat.title }}</div>
+              <div class="stat-card-value">{{ stat.value }}</div>
+              <div :class="['stat-card-info', stat.trend]">
+                {{ stat.trend === 'up' ? '↑' : '↓' }} {{ stat.changePercentage }}% 與上週相比
+              </div>
+            </div>
+          </div>
+     
+          <div class="charts-row">
+
+
+            <div class="chart-container">
+              <div class="chart-header">
+                <h3 class="chart-title">總收入趨勢</h3>
+                <div class="chart-actions">
+                  <button 
+                    v-for="period in ['週', '月', '年']" 
+                    :key="period"
+                    class="chart-btn"
+                    :class="{ active: selectedPeriod === period }"
+                    @click="selectedPeriod = period"
+                  >
+                    {{ period }}
+                  </button>
+                </div>
+              </div>
+              <canvas id="revenueChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+              <div class="chart-header">
+                <h3 class="chart-title">使用者分布</h3>
+              </div>
+              <canvas id="userChart"></canvas>
+            </div>
+          </div>
+        
+          <div class="table-container">
+            <h3 class="chart-title" style="margin-bottom: 20px;">最近交易記錄</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>客戶</th>
+                  <th>日期</th>
+                  <th>金額</th>
+                  <th>狀態</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(transaction, index) in transactions" :key="index">
+                  <td>#{{ transaction.id }}</td>
+                  <td>{{ transaction.customer }}</td>
+                  <td>{{ transaction.date }}</td>
+                  <td>{{ transaction.amount }}</td>
+                  <td>
+                    <span :class="['status', transaction.status.toLowerCase()]">
+                      {{ transaction.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+
+        </div> 
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    
+    
+
+    const vm=createApp({
+      methods: {
+        // formatNumber(num) {
+        //             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        //         },
+        formatTime(seconds) {
+                    const days = Math.floor(seconds / 86400);
+                    const hours = Math.floor((seconds % 86400) / 3600);
+                    const mins = Math.floor((seconds % 3600) / 60);
+                    const secs = seconds % 60;
+                    return `${days}d ${hours}h ${mins}m ${secs}s`;
+                },
+        getFanStatusClass(fan) {
+            if (!fan.isRunning) return '';
+            if (fan.temperature > 60 || fan.speed < 30) return 'critical';
+            if (fan.temperature > 50 || fan.speed < 50) return 'warning';
+            return 'good';
+        },
+      },
+      data() {
+        return {
+          formatNumber(num) {
+                    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                },
+          monitor: {
+                    // 系統監控數據
+                    upTime: 86432, // 秒
+                    lastReboot: '2023-05-10 14:30:22',
+                    cpuUsage: 45.6,
+                    cpuChange: 2.3,
+                    memoryUsage: 67.8,
+                    memoryChange: -1.2,
+                    fans: [
+                      { id: 1, name: 'CPU FAN', speed: 75, temperature: 42, isRunning: true, maxSpeed: 100 },
+                      { id: 2, name: 'SYS_FAN1', speed: 68, temperature: 38, isRunning: true, maxSpeed: 100 },
+                      { id: 3, name: 'SYS_FAN2', speed: 82, temperature: 56, isRunning: true, maxSpeed: 100 },
+                      { id: 4, name: 'SYS_FAN3', speed: 45, temperature: 48, isRunning: true, maxSpeed: 100 },
+                      { id: 5, name: 'CPU FAN2', speed: 0, temperature: 32, isRunning: false, maxSpeed: 100 },
+                    ],
+                    Temps: [
+                      { id: 1, name: 'CPU FAN', speed: 75, temperature: 42, isRunning: true, maxSpeed: 100 },
+                      { id: 2, name: 'SYS_FAN1', speed: 68, temperature: 38, isRunning: true, maxSpeed: 100 },
+                      { id: 3, name: 'SYS_FAN2', speed: 82, temperature: 56, isRunning: true, maxSpeed: 100 },
+                      { id: 4, name: 'SYS_FAN3', speed: 45, temperature: 48, isRunning: true, maxSpeed: 100 },
+                      { id: 5, name: 'CPU FAN2', speed: 0, temperature: 32, isRunning: false, maxSpeed: 100 },
+                    ],
+                    Voltages: [
+                      { id: 1, name: 'CPU FAN', speed: 75, temperature: 42, isRunning: true, maxSpeed: 100 },
+                      { id: 2, name: 'SYS_FAN1', speed: 68, temperature: 38, isRunning: true, maxSpeed: 100 },
+                      { id: 3, name: 'SYS_FAN2', speed: 82, temperature: 56, isRunning: true, maxSpeed: 100 },
+                      { id: 4, name: 'SYS_FAN3', speed: 45, temperature: 48, isRunning: true, maxSpeed: 100 },
+                      { id: 5, name: 'CPU FAN2', speed: 0, temperature: 32, isRunning: false, maxSpeed: 100 },
+                    ],
+          },
+          hardware: {
+                    devicename : 'mark-Z890-GAMING-X-WIFI7',
+                    boardmodel : 'Gigabyte Technology Co., Ltd. Z890 GAMING X WIFI7',
+                    memory : '16.0 GiB',
+                    cpu : 'Intel® Core™ Ultra 5 225 x 10',
+                    gpu : 'NVIDIA Corporation GM206 [GeForce GTX 960]',
+                    disk : '2.0 TB',
+          },
+          os: {
+                    version : 'Ubuntu 22.04.5 LTS',
+                    platform : '64bits'
+          },
+          smbios: {
+                    bios: {
+                        vendor: 'American Megatrends Inc.',
+                        version: 'P2.10',
+                        releaseDate: '06/15/2022',
+                        biosRevision: '5.12',
+                        firmwareRevision: '1.44',
+                        romSize: '16 MB',
+                        characteristics: [
+                            'ISA is supported',
+                            'PCI is supported',
+                            'Plug and Play is supported',
+                            'APM is supported',
+                            'BIOS is upgradeable',
+                            'BIOS shadowing is allowed',
+                            'Boot from CD is supported',
+                            'Selectable boot is supported',
+                            'EDD is supported',
+                            'UEFI is supported'
+                        ]
+                    },
+                    system: {
+                        manufacturer: 'Dell Inc.',
+                        productName: 'Precision 5820 Tower',
+                        version: 'System Version',
+                        serialNumber: 'ABCD1234',
+                        uuid: '4C4C4544-0034-5210-8043-B8C04F4D3332',
+                        skuNumber: '07A1',
+                        wakeUpType: 'Power Switch',
+                        systemType: 'Desktop',
+                        powerSupplyState: 'Safe'
+                    },
+                    baseboard: {
+                        manufacturer: 'Dell Inc.',
+                        product: '0X4DXD',
+                        version: 'A00',
+                        serialNumber: '/ABCD1234/CN1296368700ID/',
+                        assetTag: 'Default string',
+                        locationInChassis: 'Default string',
+                        boardType: 'Motherboard',
+                        features: [
+                            'Board is a hosting board',
+                            'Board is replaceable',
+                            'Board is removable',
+                            'Board requires at least one daughter board'
+                        ]
+                    },
+                    processors: [
+                        {
+                            socket: 'CPU 1',
+                            manufacturer: 'Intel',
+                            version: 'Intel(R) Xeon(R) W-2145 CPU @ 3.70GHz',
+                            coreCount: 8,
+                            coreEnabled: 8,
+                            threadCount: 16,
+                            maxSpeed: 4500,
+                            currentSpeed: 3700,
+                            features: [
+                                '64-bit capable',
+                                'Multi-Core',
+                                'Hardware Thread',
+                                'Execute Protection',
+                                'Enhanced Virtualization',
+                                'Power/Performance Control'
+                            ]
+                        }
+                    ],
+                    memory: {
+                        memoryControllers: 4,
+                        maxCapacity: 512,
+                        supportedMemoryTypes: ['DDR4', 'SDRAM', 'ECC'],
+                        modules: [
+                            {
+                                slot: 'DIMM_A1',
+                                size: 16,
+                                type: 'DDR4',
+                                manufacturer: 'Samsung',
+                                serialNumber: '1234567890',
+                                speed: 2666,
+                                voltage: 1.2
+                            },
+                            {
+                                slot: 'DIMM_A2',
+                                size: 16,
+                                type: 'DDR4',
+                                manufacturer: 'Samsung',
+                                serialNumber: '1234567891',
+                                speed: 2666,
+                                voltage: 1.2
+                            },
+                            {
+                                slot: 'DIMM_B1',
+                                size: 16,
+                                type: 'DDR4',
+                                manufacturer: 'Micron',
+                                serialNumber: 'ABCDEF1234',
+                                speed: 2666,
+                                voltage: 1.2
+                            },
+                            {
+                                slot: 'DIMM_B2',
+                                size: 16,
+                                type: 'DDR4',
+                                manufacturer: 'Micron',
+                                serialNumber: 'ABCDEF1235',
+                                speed: 2666,
+                                voltage: 1.2
+                            }
+                        ]
+                    }
+                  }
+        }
+      },
+      setup() {
+        console.log("Setup()")
+        const sidebarCollapsed = ref(false);
+        const currentPage = ref('dashboard');
+        const selectedPeriod = ref('月');
+        
+        const navItems = ref([
+          { name: 'dashboard', icon: '📊', text: '儀表板' },
+          { name: 'system', icon: '👥', text: 'System Info' },
+          { name: 'performance', icon: '📦', text: 'Performance' }, //usage : cpu ,gpu,network,ssd
+          { name: 'sensor', icon: '👥', text: 'Sensor' }, //temperature, FAN , Voltage
+          { name: 'control', icon: '📦', text: 'Control' },
+        //  { name: 'memory', icon: '🛒', text: 'Memory' },
+        //  { name: 'harddisk', icon: '📈', text: 'HardDisk' },
+        //  { name: 'network', icon: '📈', text: 'Network' },
+          { name: 'settings', icon: '⚙️', text: '設定' }
+        ]);
+        
+        const stats = ref([
+          { title: '總收入', value: '¥152,250', changePercentage: '12.5', trend: 'up' },
+          { title: '總訂單', value: '785', changePercentage: '8.2', trend: 'up' },
+          { title: '訪問人數', value: '12,456', changePercentage: '3.8', trend: 'down' },
+          { title: '轉換率', value: '4.6%', changePercentage: '1.2', trend: 'up' }
+        ]);
+        
+        const transactions = ref([
+          { id: '45612', customer: '林小明', date: '2025-04-08', amount: '¥2,500', status: 'Active' },
+          { id: '45611', customer: '陳大文', date: '2025-04-07', amount: '¥1,800', status: 'Pending' },
+          { id: '45610', customer: '王小華', date: '2025-04-06', amount: '¥3,200', status: 'Active' },
+          { id: '45609', customer: '李志明', date: '2025-04-05', amount: '¥950', status: 'Inactive' },
+          { id: '45608', customer: '張美玲', date: '2025-04-04', amount: '¥1,275', status: 'Active' }
+        ]);
+        
+        const currentDate = ref(new Date().toLocaleDateString('zh-TW', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }));
+        
+        //更新時間
+        const currentTime = ref('')
+        const updateTime = () => {
+          //console.log(updateTime);
+          currentTime.value = new Date().toLocaleString(); //.toLocaleDateString(); //.toLocaleTimeString()
+        }
+        //更新網路連線狀態
+        const isOnline = ref(navigator.onLine)
+        const updateNetworkStatus = () => {
+          isOnline.value = navigator.onLine
+        }
+
+        const toggleSidebar = () => {
+          sidebarCollapsed.value = !sidebarCollapsed.value;
+        };
+
+        const setActive = (newname,oldname) => {
+          console.log("setActive: newname=%s oldname=%s",newname,oldname);
+          //currentPage = name;  //fail ?
+          // this.activeMenu = menu;
+          // 切換頁面時重新初始化圖表
+          //if(name === 'system')
+            // console.log('name');
+            //initSystemPage();
+            //console.log(name);
+            if (newname === 'system') {
+              //console.log("dffdgf");
+              //disposeChart()
+            } 
+            
+            else if (newname === 'dashboard') {
+              //console.log(cpuData.value.length)
+              //InitDashboardPage1()
+              //console.log(initChart);
+              setTimeout(initChart,000)  //async ? 極其重要
+              //initChart();
+            }
+            else if (newname === 'performance') {
+              setTimeout(initChart,000)  //async ? 極其重要
+
+            }
+        };
+     
+        const InitPerformancePage1 = () => {
+            console.log("InitPerformancePage1");
+            // 初始化 ECharts 折線圖
+            //MylineEChart.value = echarts.init(chartDom.value);
+            // MylineEChart.value.setOption({
+            //     xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E','F'] },
+            //     yAxis: { type: 'value' },
+            //     series: [{ type: 'line', data: [100,200,300,400,500,600] }]
+            // });
+        }
+
+        //const chartDom = ref(null);
+   //     const MyrevenueChart= ref(null);
+   //     const updateTime = ref(new Date().toLocaleString());
+        const lineChartDom = ref(null);
+        const lineChart = ref(null);
+        const cpuData = ref([]);
+        const displayDuration = ref(30000); // 默认显示30秒数据
+        const markData=200;
+     
+        function initChart() {
+          //const chartDom = document.getElementById('echartline');
+          const chartDom = lineChartDom.value
+          console.log('initChart1',chartDom);
+          
+
+          // 如果之前已經有 chart，先卸載
+          if (echarts.getInstanceByDom(chartDom)) {
+            echarts.dispose(chartDom);
+            console.log('圖表已卸載');
+          }
+
+          // 初始化
+          const instance = echarts.init(chartDom);
+          const option = {
+            animation: false,            
+            title: { text: '範例圖表' },
+            tooltip: {},
+            xAxis: { type: 'time',data: ['A', 'B', 'C', 'D'] },
+            yAxis: {},
+            series: [{ type: 'line', data: cpuData.value ,smooth : true,}],
+            
+          };
+          instance.setOption(option);
+          lineChart.value=instance;
+          console.log('圖表已加載');
+        }
+
+        function disposeChart() {
+          const chartDom = document.getElementById('echartline');
+          console.log('disposeChart',chartDom);
+          const instance = echarts.getInstanceByDom(chartDom);
+          if (instance) {
+            echarts.dispose(chartDom);
+            console.log('圖表已卸載');
+          } else {
+            console.log('沒有可卸載的圖表');
+          }
+        }
+
+
+        const InitDashboardPage = () => {
+          console.log("InitDashboardPage");
+          console.log('initChart1',lineChartDom.value);
+          console.log('initChart2',lineChart.value);
+          console.log('initChart3',cpuData.value);
+          console.log('initChart4',sidebarCollapsed.value);
+          //initChart();
+          setTimeout(initChart,0000)
+        //   const echartDom = document.getElementById('echartline');
+        //   console.log('initChart5',echartDom);
+        //   lineChart.value = echarts.init(echartDom);
+
+        // //  if (lineChartDom.value) {
+        // //      console.log('init');
+        // //      lineChart.value = echarts.init(lineChartDom.value);
+
+              
+        //       const option = {
+        //           title: {
+        //               text: 'CPU Usage 时间轴曲线',
+        //               left: 'center'
+        //           },
+        //           animation: false,
+        //           // xAxis: { type: 'time' },
+        //           // yAxis: { type: 'value' },
+        //           // series: [{ type: 'line', }]
+        //           xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E','F'] },
+        //           yAxis: { type: 'value' },
+        //           series: [{ type: 'line', data: [10,20,30,40,50,60] }]
+        //       };
+              
+        //       lineChart.value.setOption(option);
+        //  //   }
+
+          const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+          const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+              labels: ['一月', '二月', '三月', '四月', '五月', '六月'],
+              datasets: [{
+                label: '收入 (千元)',
+                data: [65, 59, 80, 81, 56, 85],
+                fill: false,
+                borderColor: '#4361ee',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: false,  //Bug mark
+              maintainAspectRatio: false
+            }
+          });
+
+          // 使用者分布圖表
+          const userCtx = document.getElementById('userChart').getContext('2d');
+          const userChart = new Chart(userCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['新用戶', '回訪用戶', 'VIP用戶'],
+              datasets: [{
+                data: [25, 55, 20],
+                backgroundColor: [
+                  '#4cc9f0',
+                  '#4361ee',
+                  '#f72585'
+                ]
+              }]
+            },
+            options: {
+              responsive: false, //Bug
+              maintainAspectRatio: false
+            }
+          });
+        }
+     
+
+        //TODO:
+        const InitXXXXPage = () => {
+          console.log("InitXXXPage");
+          // let text = 'Hello Vue'
+          // setTimeout(() => {
+          //   text = 'Hello world'
+          //   console.log(text)
+          // }, 1000)
+        }
+        // 模拟获取CPU使用率数据
+        const getCpuUsage = () => {
+            // 实际项目中这里应该是从API获取真实数据
+            // 这里我们模拟一个随机值
+            return Math.random() * 100;
+        };
+
+        // 數據更新方法
+        const updateCharts = async () => {
+            console.log('updateCharts');
+            //console.log('updateChartData',lineChart.value);
+            //console.log('updateChartData1',cpuData);
+            const now = new Date();
+            const usage = getCpuUsage();
+            
+            // 添加新数据点
+            cpuData.value.push([now, usage]); //share
+            
+            // 移除超出显示时长的旧数据
+            const cutoffTime = now.getTime() - displayDuration.value;
+            cpuData.value = cpuData.value.filter(item => item[0].getTime() > cutoffTime);
+
+            console.log('updateChartData2',cpuData.value.length)
+
+
+            updateTime.value = new Date().toLocaleString();
+    // 更新折線圖資料
+            // 更新摘要卡片
+            //summaryData.value = newData.summary;
+            
+            // 更新折線圖
+            lineChart.value.setOption({
+                series: [{
+                    data: cpuData.value,
+                    type: 'line',
+                    //smooth: true
+                }]
+            });
+
+        };
+
+
+        onMounted(() => {
+          console.log("onMounted");
+          //TODO:
+          InitDashboardPage();
+          //InitPerformancePage();
+          //InitGpuPage();
+          // 每 2 秒更新資料
+          setInterval(updateCharts, 100);
+          setInterval(updateTime, 1000)
+          window.addEventListener('online', updateNetworkStatus)
+          window.addEventListener('offline', updateNetworkStatus)
+        });
+
+        // onUnmounted(() => {
+        //   console.log("onUnmounted");
+        //   clearInterval(timer)
+        // })
+
+        
+        //下列資料會在網頁中直接使用
+        return { 
+          sidebarCollapsed,
+          currentPage,
+          navItems,
+          stats,
+          transactions,
+          currentDate,
+          currentTime,
+          isOnline ,
+          selectedPeriod,
+          toggleSidebar,
+        //  text,
+          setActive,
+          lineChart,
+          lineChartDom,
+
+          //InitPerformancePage, function
+          //InitDashboardPage, function
+          //initChart, function
+          //disposeChart, function
+          //  initSystemCharts function
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
