@@ -13,7 +13,59 @@
         const App ={
             //filters: //only for Vue 2.x
             //delimiters : [ '%{','}%'],  //<h1>%{ message }%</h1>
-            
+            beforeCreated(){
+                console.log('beforeCreated()')
+            },
+            created(){
+                console.log('created()')
+            },
+            beforeMount(){
+                console.log('beforeMount()')
+            },
+            mounted(){
+                console.log('mounted()')
+            },
+            beforeUpdate(){
+                console.log('beforeUpdate()')
+            },
+            updated(){
+                console.log('updated()')
+            },
+            beforeDestroy() //2.x
+            {
+                console.log('beforeDestroy()')
+            },
+            beforeUnmount() //3.x
+            {
+                console.log('beforeUnmount()')
+            },
+            destroyed() //2.x
+            {
+                console.log('destroyed()')
+            },
+            unmounted() //3.0
+            {
+                console.log('unmounted()')
+            },
+            errorCaptured() 
+            {
+                console.log('errorCaptured()')
+            },
+            activated() 
+            {
+                console.log('activated()')
+            },
+            deactivated() 
+            {
+                console.log('deactivated()')
+            },
+            watch: {
+                count (val,oldValue) {
+                    console.log('watch ${val} ${oldValue}') 
+                    console.log(val,oldValue) 
+                }
+
+            },
             data() {
                 console.log('data()')
                 console.log(this)
@@ -81,6 +133,7 @@
             },
             template: `
                 <h1>{{ message }}</h1>
+                <!-- <h1 v-text="message"></h1> -->
                 <button @click="increment">Count: {{ count }}</button>
                 <button @click="dumpinfo">dumpinfo</button>
                 <h1>{{ getcountmethods() }}</h1>
@@ -105,6 +158,7 @@
         const vm=app.mount('#app');
         console.log(vm);
         console.log(vm.$data);
+        //app.unmount();
         //see https://www.w3schools.com/vue/vue_ref_component-instance.php      
     </script>
 </body>
