@@ -11,23 +11,80 @@
         const { createApp, ref, onMounted, onUnmounted } = Vue
 
         const App ={
+            //filters: //only for Vue 2.x
+            //delimiters : [ '%{','}%'],  //<h1>%{ message }%</h1>
+            
             data() {
                 console.log('data()')
                 console.log(this)
+ 
                 return {
                     count : 33,
                     message: 'Hello from data!'
                 }
             },
             methods: {
+                //fail : Note:不能使用箭頭函數,因為這裡的this指向windows
+                // increment: () => {
+                //     console.log('(optionsApi) increment()');
+                //     console.log(this)
+                //     //this.count++
+                // },
+
+                //ok
+                // increment: function() {
+                //     console.log('(optionsApi) increment()');
+                //     console.log(this);
+                //      this.count++
+                // },
+
+                //ok
                 increment() {
-                    console.log('(optionsApi) increment()');
+                    console.log('increment()');
+                    console.log(this);
                     this.count++
-                }
+                },
+                dumpinfo() {
+                    console.log('dumpinfo()');
+                    console.log("fffff",vm===this);  //this 就是 vm
+                    console.log(vm);
+                    console.log(this);
+                    console.log(this.count);
+                    console.log(this.message);
+                    console.log(this.dumpinfo);
+                    console.log(this.increment);
+                    
+                },
+                getcountmethods() {
+                    console.log('getcountmethod()');
+                    return(this.count)
+                },
+
+            },
+            computed: {
+                // getcountcomputed() {
+                //     console.log('getcountcomputed()');
+                //     console.log(this);
+                //     return(this.count)
+                // },
+                getcountcomputed : {
+                    get() { 
+                        console.log('get');
+                        return this.count
+                    },
+                    set(val){ 
+                        console.log('set');
+                        this.count=val
+                    }
+                },
+
             },
             template: `
                 <h1>{{ message }}</h1>
                 <button @click="increment">Count: {{ count }}</button>
+                <button @click="dumpinfo">dumpinfo</button>
+                <h1>{{ getcountmethods() }}</h1>
+                <h1>{{ getcountcomputed }}</h1>
             `,
             // setup()
             // {
